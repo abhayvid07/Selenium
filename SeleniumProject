@@ -1,0 +1,168 @@
+package productDetailsTechVerito;
+
+import static org.testng.Assert.assertEquals;
+
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.testng.asserts.SoftAssert;
+
+public class TVProductTestMain {
+	
+	static WebDriver driver;
+	 static SoftAssert s_Assert = new SoftAssert();
+	
+	public static void main(String[] args) {
+		
+		System.setProperty("webdriver.chrome.driver","C:\\Users\\abhay\\OneDrive\\Desktop\\SelfAutomation\\Selenium\\webdriver\\chromedriver.exe");
+		 driver  = new ChromeDriver();
+		 System.out.println("Start Browser" );
+		 startBrowser();
+		 login();
+		 homePage();
+		 verification(); 
+		 addProduct();
+		 listing();
+		 edit();
+		 delete();
+	}
+	
+	public  static void startBrowser( ) {
+		
+				driver.get(" https://abhay-agarwal.herokuapp.com/admin");
+				System.out.println("QA Test Started ");
+				driver.manage().window().maximize();
+				driver.manage().timeouts().implicitlyWait(2,TimeUnit.SECONDS);		
+		
+	}
+	public  static void login() {
+	
+				driver.findElement(By.xpath("//input[@id='admin_user_email']")).sendKeys("admin@example.com");
+				driver.findElement(By.xpath("//input[@type='submit' and @name='commit']")).sendKeys(Keys.ENTER);
+				WebElement errorMsg=	driver.findElement(By.xpath("//div[@class='flash flash_alert']"));
+				String msg=errorMsg.getText();
+				System.out.println("Error msg without entering password or id : " + msg);//error message scenario
+				driver.findElement(By.xpath("//input[@id='admin_user_password']")).sendKeys("password");
+				driver.findElement(By.xpath("//input[@type='submit' and @name='commit']")).sendKeys(Keys.ENTER);
+				
+	}
+	
+	//Method check whether the link is enabled and click after verification
+	public static void homePage() {
+		
+				WebElement productLink = driver.findElement(By.xpath("//a[@href='/admin/products']"));
+				if (productLink.isDisplayed() && productLink.isEnabled()) {
+					productLink.click();
+					System.out.println("Product is displayed as well as enabled");
+				}
+				else {
+					System.out.println("Product link is either not enabled or not displayed");
+				}
+			}
+	
+	//This method verifies two text whether they are displayed or not
+	public static void verification() {
+		//verification_1
+	WebElement productMessage=	driver.findElement(By.xpath("//span[@class='blank_slate']"));
+	String errorMsg = productMessage.getText();
+	System.out.println(errorMsg);
+	s_Assert.assertEquals(errorMsg,"There are no Products yet.") ;//method is failed if the message is not displayed
+	System.out.println("Actual message : " +errorMsg + " : Expected : There are no Products yet.  " );
+	//verification_2 New Product link is enabled and displayed or not
+	WebElement newProductLink = driver.findElement(By.xpath("//a[@href='/admin/products/new']"));
+	if(newProductLink.isDisplayed()&& newProductLink.isEnabled()) {
+		System.out.println("New Product link is enabled");
+	}
+	else {
+		System.out.println("Product is either not enabled or not displayed");
+	}
+	driver.findElement(By.xpath("//a[@href='/admin/products/new']")).click();
+			}	
+	public static void addProduct() {
+		 
+		WebElement wb = driver.findElement(By.id("product_title"));
+		wb.sendKeys("MicroServices");
+ 		String service = wb.getText();
+ 		System.out.println(service);
+ 		WebElement sku=driver.findElement(By.id("product_sku")); // checking whether value provided are in range or not
+ 		sku.sendKeys("javaSpringBoot");
+ 		String typedValue=sku.getText();
+ 		int sizeOfTypedValue=typedValue.length();
+ 		if(sizeOfTypedValue==10) {
+ 			System.out.println("Enter value is in defined range");
+ 		}
+ 		else {
+ 			System.out.println("values are extending the limit,hence changing the value ");
+ 			sku.clear();
+ 			sku.sendKeys("JavaCore");
+ 		}
+ 		driver.findElement(By.id("product_description")).sendKeys("This architecture is better than monolith as it breaks the services in different services");
+ 		driver.findElement(By.xpath("//input[@type='submit']")).click();
+ }
+	public static void listing() {
+		//Check box should be enabled
+		driver.getWindowHandle();
+		String firstPageTitle =driver.getTitle();
+		System.out.println(firstPageTitle);
+		 driver.findElement(By.xpath("//li//following::li//following::li//following::li//a[@href='/admin/products']")).click();
+		driver.getWindowHandle();
+		String lsitTitle=driver.getTitle();
+		System.out.println("Title " + lsitTitle);
+		WebElement list =driver.findElement(By.xpath("//tbody//tr//td//div//input[@type='checkbox']"));
+		if (list.isEnabled()) {
+			list.click();
+			System.out.println("Product is selected from the list");
+		}else {
+			System.out.println("Element is not present");
+		}	
+	}
+ public static void edit() {
+		WebElement editClick=driver.findElement(By.xpath("//tbody//tr//td//following::td//following::td//following::td//following::td//following::td//following::td//following::td//div//a[@class='edit_link member_link']"));	
+		editClick.click();
+		String title = driver.getTitle();
+		System.out.println("Title of the page is " + title);
+		s_Assert.assertEquals(title, "Edit Product");
+		
+		WebElement update =driver.findElement(By.id("product_sku"));
+		String value = update.getAttribute("value");
+		System.out.println("Current sku value is : " + value);
+		 
+		if (update.isEnabled()) {
+			System.out.println("Sku value is enabled and value can be edit");
+			update.clear();}
+			
+		else {
+			System.out.println("sku value is not enabled and hence cannot be edit");	
+		}
+			update.sendKeys("SpringBoot");
+			String check = update.getText();
+			driver.findElement(By.xpath("//input[@type='submit']")).click();
+			WebElement verifySkuValue = driver.findElement(By.xpath("//tr//following::tr//td"));
+			String fValue = verifySkuValue.getText();
+			s_Assert.assertEquals(check, fValue);
+			System.out.println("Actual value : " + check + "Expected value : " +fValue);			
+		}
+ public static void delete() {
+	 	driver.findElement(By.xpath("//li//following::li//following::li//following::li//a[@href='/admin/products']")).click();
+		WebElement deleteBtn=driver.findElement(By.xpath("//tbody//tr//td//following::td//following::td//following::td//following::td//following::td//following::td//following::td//div//a//following::a//following::a[@title='Delete']"));
+		if (deleteBtn.isDisplayed() && deleteBtn.isEnabled()) {
+			deleteBtn.click();
+		}else {
+			System.out.println("Delete button is not displayed");
+		}
+		Alert alert = driver.switchTo().alert();
+		String deleteMsg=	alert.getText();
+		System.out.println("Delete Msg : " + deleteMsg);
+		alert.accept();
+		String getTitle=driver.getTitle();
+		System.out.println("Current title " + getTitle);
+	}
+	}
+
